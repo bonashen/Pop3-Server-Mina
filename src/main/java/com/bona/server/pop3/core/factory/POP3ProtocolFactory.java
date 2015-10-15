@@ -54,6 +54,7 @@ public final class POP3ProtocolFactory implements POP3Factory {
     protected void loadCommands(){
         for(BuiltinCommandRegistry entry :BuiltinCommandRegistry.values()){
             commandMap.put(entry.name(), (Class<Command>) entry.getCommandClass());
+            LOG.debug("Added command {}",entry.name());
         }
     }
 
@@ -62,6 +63,7 @@ public final class POP3ProtocolFactory implements POP3Factory {
         Class<? extends Command> cmdClass = commandMap.get(name.toUpperCase());
         if(null!= cmdClass){
             try {
+                LOG.debug("Created command :{}",cmdClass.getName());
                 return cmdClass.newInstance();
             } catch (InstantiationException e) {
                 e.printStackTrace();

@@ -22,13 +22,12 @@ public class RetrCommand extends AbstractCommand {
         }
 
         int index = Integer.parseInt(argument) - 1;
-        BufferedReader br =  new BufferedReader(new InputStreamReader(getStorage().openStream(index)));
-
-        if(null==br){
+        InputStream mailStream = getStorage().openStream(index);
+        if(null==mailStream){
             sendErrMessage("not found mail!maybe delete!");
-            sendEndMessage();
             return;
         }
+        BufferedReader br =  new BufferedReader(new InputStreamReader(mailStream));
 
         try {
             LOG.debug("prepare mail for user client.");

@@ -22,7 +22,7 @@ public class AuthFilter extends DefaultRequestFilter {
         }
     };
 
-    private final RequestFilter acceptFilter = new AcceptRequestFilter(Arrays.asList(new String[]{"USER", "PASS", "QUIT","CAPA"}));
+    private final RequestFilter acceptFilter = new AcceptRequestFilter(Arrays.asList(new String[]{"USER", "PASS", "QUIT","CAPA","REST"}));
 
     @Override
     public boolean doFilter(POP3Context context, String cmd, String argument) {
