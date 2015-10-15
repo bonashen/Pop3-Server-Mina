@@ -17,7 +17,6 @@ public class RunServer {
         System.setProperty(Constants.PROTOCOL_POP3_STORAGE_FACTORY, FileStorageFactory.class.getName());
         /**
          * set storage root path
-         * like {rootpath}\username\*.eml
         **/
         System.setProperty(Constants.INBOX_STORAGE_DIR,new File(".").getAbsolutePath());
 

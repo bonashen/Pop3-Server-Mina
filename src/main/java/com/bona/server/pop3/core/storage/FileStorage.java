@@ -25,7 +25,7 @@ public class FileStorage extends DefaultStorage {
     }
 
     @Override
-    public void fetch() {
+    public synchronized void fetch() {
         for (File file : getUserDir().listFiles()) {
             boolean append = true;
             for (File mail : mails) {
@@ -44,7 +44,7 @@ public class FileStorage extends DefaultStorage {
         return index < getMails().size() && index > -1;
     }
 
-    protected List<File> getMails() {
+    protected synchronized List<File> getMails() {
         if (mails.size() == 0)
             mails.addAll(Arrays.asList(getUserDir().listFiles()));
         return mails;
@@ -84,7 +84,7 @@ public class FileStorage extends DefaultStorage {
     }
 
     @Override
-    public InputStream openStream(int index) {
+    public synchronized InputStream openStream(int index) {
         /**
          * if index mail not in 0..count range or index mail is deleted  return null;
          */
@@ -121,7 +121,7 @@ public class FileStorage extends DefaultStorage {
     }
 
     @Override
-    public boolean delete(int index) {
+    public synchronized boolean delete(int index) {
         boolean deleted = deleteFiles.containsKey(index);
         if (!deleted || !getMails().get(index).exists()) {
             if (checkIndex(index))
@@ -143,7 +143,7 @@ public class FileStorage extends DefaultStorage {
     }
 
     @Override
-    public void commit() {
+    public synchronized void commit() {
         for (File file : deleteFiles.values()) {
             getMails().remove(file);
             if (!file.delete()) {
@@ -155,7 +155,7 @@ public class FileStorage extends DefaultStorage {
     }
 
     @Override
-    public void rollback() {
+    public synchronized void rollback() {
         if (getContext().isAuthorized())
             LOG.info("User {} rollback delete {} files.", getUserName(), deleteFiles.size());
         deleteFiles.clear();

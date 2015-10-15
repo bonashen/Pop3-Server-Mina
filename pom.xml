@@ -5,8 +5,10 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.bona.server</groupId>
-    <artifactId>Pop3-Server</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <artifactId>POP3-Server-Core</artifactId>
+    <packaging>jar</packaging>
+    <name>Bona POP3 Server</name>
+    <version>0.1</version>
 
     <dependencies>
 
@@ -43,14 +45,38 @@
             <version>4.11</version>
             <scope>test</scope>
         </dependency>
+
     </dependencies>
     <build>
+        <finalName>BonaPOP3Server</finalName>
+        <sourceDirectory>src/main/java</sourceDirectory>
+        <testSourceDirectory>src/test/java</testSourceDirectory>
+        <testResources>
+            <testResource>
+                <directory>src/test/resources</directory>
+                <includes>
+                    <include>
+                        *.properties
+                    </include>
+                </includes>
+            </testResource>
+
+        </testResources>
         <plugins>
+            <!-- 设置源文件编码方式-->
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <configuration>
                     <source>1.7</source>
                     <target>1.7</target>
+                    <encoding>UTF-8</encoding>
+                </configuration>
+            </plugin>
+            <!-- 解决资源文件的编码问题 -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-resources-plugin</artifactId>
+                <configuration>
                     <encoding>UTF-8</encoding>
                 </configuration>
             </plugin>
