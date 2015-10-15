@@ -1,6 +1,7 @@
 package com.bona.server.pop3.core.storage;
 
 import com.bona.server.pop3.util.Constants;
+import com.sun.mail.util.LineOutputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,15 +26,15 @@ public class FileStorage extends DefaultStorage {
 
     @Override
     public void fetch() {
-        for(File file:getUserDir().listFiles()){
+        for (File file : getUserDir().listFiles()) {
             boolean append = true;
-            for(File mail:mails){
-                if(mail.equals(file)){
+            for (File mail : mails) {
+                if (mail.equals(file)) {
                     append = false;
                     break;
                 }
             }
-            if(append){
+            if (append) {
                 mails.add(file);
             }
         }
@@ -84,15 +85,39 @@ public class FileStorage extends DefaultStorage {
 
     @Override
     public InputStream openStream(int index) {
+        /**
+         * if index mail not in 0..count range or index mail is deleted  return null;
+         */
+        if (isDeleted(index) || !checkIndex(index)) return null;
+
+        ByteArrayOutputStream buffered = new ByteArrayOutputStream();
+        LineOutputStream out = new LineOutputStream(buffered);
+        FileInputStream fileStream;
         try {
-            if (!isDeleted(index)) {
-                if (checkIndex(index))
-                    return new FileInputStream(getMails().get(index));
-            }
+            fileStream = new FileInputStream(getMails().get(index));
         } catch (FileNotFoundException e) {
             e.printStackTrace();
+            return null;
         }
-        return null;
+        BufferedReader reader = new BufferedReader(new InputStreamReader(fileStream));
+        String txt;
+        try {
+            while ((txt = reader.readLine()) != null) {
+                out.writeln(txt);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        } finally {
+            try {
+                fileStream.close();
+                reader.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+                return null;
+            }
+        }
+        return new ByteArrayInputStream(buffered.toByteArray());
     }
 
     @Override
@@ -112,7 +137,7 @@ public class FileStorage extends DefaultStorage {
     @Override
     public String getState(int index) {
         if (checkIndex(index))
-            return "size:"+getMails().get(index).length();
+            return "size:" + getMails().get(index).length();
         else
             return "not found!";
     }
