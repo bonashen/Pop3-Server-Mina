@@ -14,19 +14,40 @@ import java.util.*;
 public class FileStorage extends DefaultStorage {
 
     private final static Logger LOG = LoggerFactory.getLogger(FileStorage.class);
+    public static final String EMAIL_FILE_EXT_NAME = ".eml";
 
-    private final File root;
-    private Map<Integer, File> deleteFiles = new HashMap<Integer, File>();
-    private List<File> mails = new ArrayList<File>();
+    private File root = null;
+    private Map<Integer, File> deleteFiles = Collections.synchronizedMap(new HashMap<Integer, File>());
 
-    public FileStorage() {
-        root = new File(System.getProperty(Constants.INBOX_STORAGE_DIR, "."));
-        LOG.info("Inbox storage path:{}", root.getAbsolutePath());
+    private List<File> mails = Collections.synchronizedList(new ArrayList<File>());
+
+    private FilenameFilter filenameFilter = new FilenameFilter() {
+        @Override
+        public boolean accept(File dir, String name) {
+            int i = name.lastIndexOf(".");
+            String extName = i > 0 ? name.substring(i) : null;
+            return extName == null ? false : extName.equalsIgnoreCase(EMAIL_FILE_EXT_NAME);
+        }
+    };
+
+    public FileStorage(File path) {
+        root = path;
+    }
+
+
+    @Override
+    public String getState(int index) {
+        if (checkIndex(index) && !isDeleted(index)) {
+            String state = getMails().get(index).getName();
+            state = state.substring(0, state.lastIndexOf("."));
+            return "unique:" + state;
+        }
+        return null;
     }
 
     @Override
-    public synchronized void fetch() {
-        for (File file : getUserDir().listFiles()) {
+    public void fetch() {
+        for (File file : getUserDir().listFiles(filenameFilter)) {
             boolean append = true;
             for (File mail : mails) {
                 if (mail.equals(file)) {
@@ -44,21 +65,24 @@ public class FileStorage extends DefaultStorage {
         return index < getMails().size() && index > -1;
     }
 
-    protected synchronized List<File> getMails() {
+    protected List<File> getMails() {
         if (mails.size() == 0)
-            mails.addAll(Arrays.asList(getUserDir().listFiles()));
+            mails.addAll(Arrays.asList(getUserDir().listFiles(filenameFilter)));
         return mails;
     }
 
     protected File getUserDir() {
+        if (null == root) {
+            root = new File(System.getProperty(Constants.INBOX_STORAGE_DIR, "."));
+            LOG.info("Inbox storage path:{}", root.getAbsolutePath());
+        }
         File dir = new File(root, getUserName());
         if (!dir.exists()) dir.mkdirs();
-        LOG.info("User {} Inbox storage path:{}", getUserName(), dir.getAbsolutePath());
         return dir;
     }
 
     protected boolean isDeleted(int index) {
-        return !getMails().get(index).exists() || deleteFiles.containsKey(index);
+        return checkIndex(index)? (!getMails().get(index).exists()):false || deleteFiles.containsKey(index);
     }
 
     @Override
@@ -84,7 +108,7 @@ public class FileStorage extends DefaultStorage {
     }
 
     @Override
-    public synchronized InputStream openStream(int index) {
+    public InputStream openStream(int index) {
         /**
          * if index mail not in 0..count range or index mail is deleted  return null;
          */
@@ -121,7 +145,7 @@ public class FileStorage extends DefaultStorage {
     }
 
     @Override
-    public synchronized boolean delete(int index) {
+    public boolean delete(int index) {
         boolean deleted = deleteFiles.containsKey(index);
         if (!deleted || !getMails().get(index).exists()) {
             if (checkIndex(index))
@@ -135,15 +159,7 @@ public class FileStorage extends DefaultStorage {
     }
 
     @Override
-    public String getState(int index) {
-        if (checkIndex(index))
-            return "size:" + getMails().get(index).length();
-        else
-            return "not found!";
-    }
-
-    @Override
-    public synchronized void commit() {
+    public void commit() {
         for (File file : deleteFiles.values()) {
             getMails().remove(file);
             if (!file.delete()) {
@@ -155,7 +171,7 @@ public class FileStorage extends DefaultStorage {
     }
 
     @Override
-    public synchronized void rollback() {
+    public void rollback() {
         if (getContext().isAuthorized())
             LOG.info("User {} rollback delete {} files.", getUserName(), deleteFiles.size());
         deleteFiles.clear();

@@ -1,5 +1,6 @@
-package com.bona.server.pop3.core.command;
+package com.bona.server.pop3.core.command.impl;
 
+import com.bona.server.pop3.core.command.AbstractCommand;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

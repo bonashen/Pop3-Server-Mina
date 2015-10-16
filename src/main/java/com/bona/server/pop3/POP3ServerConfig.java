@@ -13,6 +13,7 @@ import com.bona.server.pop3.core.storage.DefaultStorage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.nio.charset.Charset;
 import java.util.*;
 
 /**
@@ -31,6 +32,13 @@ public class POP3ServerConfig {
     private POP3Factory pop3Factory = POP3ProtocolFactory.getInstance();
 
     private StorageFactory storageFactory = POP3StorageFactory.getInstance();
+
+    /**
+     *
+     */
+    public static final Charset DEFAULT_CHARSET = Charset.forName("ISO-8859-1");
+
+    private Charset charset;
 
     /**
      * The maximal number of recipients that this server accepts
@@ -73,6 +81,22 @@ public class POP3ServerConfig {
 
     private POP3ServerConfig() {
 
+    }
+
+    /**
+     * return the protocol codec charset.
+     * @return
+     */
+    public Charset getCharset() {
+        return charset==null?DEFAULT_CHARSET:charset;
+    }
+
+    /**
+     * set the protocol codec charset.
+     * @param charset
+     */
+    public void setCharset(Charset charset) {
+        this.charset = charset;
     }
 
     public int getMaxRecipients() {
@@ -153,6 +177,7 @@ public class POP3ServerConfig {
 
     public void setStorageFactory(StorageFactory storageFactory) {
         this.storageFactory = storageFactory;
+        LOG.debug("Changed storage factory to "+storageFactory.getClass().getName());
     }
 
     public void setPOP3Factory(POP3Factory pop3Factory) {

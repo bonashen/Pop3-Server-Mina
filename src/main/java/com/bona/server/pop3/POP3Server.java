@@ -47,27 +47,27 @@ public class POP3Server {
      */
     private POP3ServerConfig config = POP3ServerConfig.buildDefault();
 
-    public POP3Server()
-    {
+    public POP3Server() {
         initInstance();
     }
 
-    public POP3Server(POP3ServerConfig cfg){
+    public POP3Server(POP3ServerConfig cfg) {
         config = cfg;
         initInstance();
     }
 
-    public POP3Server(AuthenticationHandler handler){
+    public POP3Server(AuthenticationHandler handler) {
         this();
         config.setAuthenticationHandler(handler);
     }
-    public POP3Server(AuthenticationHandler handler,StorageFactory storageFactory){
+
+    public POP3Server(AuthenticationHandler handler, StorageFactory storageFactory) {
         this();
         config.setAuthenticationHandler(handler);
         config.setStorageFactory(storageFactory);
     }
-    private void initInstance()
-    {
+
+    private void initInstance() {
         this.commandHandler = new CommandHandler(getConfig());
         initService();
     }
@@ -75,10 +75,8 @@ public class POP3Server {
     /**
      * Initializes the runtime service.
      */
-    private void initService()
-    {
-        try
-        {
+    private void initService() {
+        try {
             IoBuffer.setUseDirectBuffer(false);
             acceptor = new NioSocketAcceptor(Runtime.getRuntime().availableProcessors() + 1);
 
@@ -88,7 +86,7 @@ public class POP3Server {
             if (LOG.isTraceEnabled())
                 chain.addLast("logger", new LoggingFilter());
 
-            chain.addLast("codec", new ProtocolCodecFilter(new TextLineCodecFactory(Charset.forName("UTF-8"))));
+            chain.addLast("codec", new ProtocolCodecFilter(new TextLineCodecFactory(getConfig().getCharset())));
 
             executor = Executors.newCachedThreadPool(new ThreadFactory() {
                 int sequence;
@@ -101,14 +99,12 @@ public class POP3Server {
 
             chain.addLast("threadPool", new ExecutorFilter(executor));
 
-            acceptor.getSessionConfig().setReadBufferSize( 1024*1024 );
-            acceptor.getSessionConfig().setIdleTime( IdleStatus.BOTH_IDLE, 10 );
+            acceptor.getSessionConfig().setReadBufferSize(1024 * 1024);
+            acceptor.getSessionConfig().setIdleTime(IdleStatus.BOTH_IDLE, 10);
             acceptor.getSessionConfig().setReuseAddress(true);
 
             handler = new POP3ConnectionHandler(getConfig(), getCommandHandler());
-        }
-        catch (Exception ex)
-        {
+        } catch (Exception ex) {
             throw new RuntimeException(ex);
         }
     }
@@ -117,10 +113,8 @@ public class POP3Server {
      * Call this method to get things rolling after instantiating the
      * SMTPServer.
      */
-    public synchronized void start()
-    {
-        if (running)
-        {
+    public synchronized void start() {
+        if (running) {
             LOG.info("POP3 server is already started.");
             return;
         }
@@ -131,26 +125,20 @@ public class POP3Server {
 
         InetSocketAddress isa;
 
-        if (this.bindAddress == null)
-        {
+        if (this.bindAddress == null) {
             isa = new InetSocketAddress(getPort());
-        }
-        else
-        {
+        } else {
             isa = new InetSocketAddress(this.bindAddress, getPort());
         }
 
         acceptor.setBacklog(config.getBacklog());
         acceptor.setHandler(handler);
 
-        try
-        {
+        try {
             acceptor.bind(isa);
             running = true;
             LOG.info("POP3 server started ...");
-        }
-        catch (Exception e)
-        {
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
@@ -159,18 +147,16 @@ public class POP3Server {
      * Stops the server by unbinding server socket. To really clean
      * things out, one must call {@link #shutdown()}.
      */
-    public synchronized void stop()
-    {
-        try
-        {
+    public synchronized void stop() {
+        try {
             try {
                 acceptor.unbind();
-            } catch (Exception e) { e.printStackTrace(); }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
 
             LOG.info("POP3 server stopped.");
-        }
-        finally
-        {
+        } finally {
             running = false;
         }
     }
@@ -179,28 +165,26 @@ public class POP3Server {
      * Shut things down gracefully. Please pay attention to the fact
      * that a shutdown implies that the server would fail to restart
      * because som internal resources have been freed.
-     *
+     * <p>
      * You can directly call shutdown() if you do not intend to restart
      * it later. Calling start() after shutdown() will throw a
      * {@link RuntimeException}.
      */
-    public synchronized void shutdown()
-    {
-        try
-        {
+    public synchronized void shutdown() {
+        try {
             LOG.info("POP3 server shutting down...");
             if (isRunning())
                 stop();
 
             try {
                 executor.shutdown();
-            } catch (Exception e) { e.printStackTrace(); }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
 
             shutdowned = true;
             LOG.info("POP3 server shutdown complete.");
-        }
-        finally
-        {
+        } finally {
             running = false;
         }
     }
@@ -208,40 +192,35 @@ public class POP3Server {
     /**
      * Is the server running after start() has been called?
      */
-    public synchronized boolean isRunning()
-    {
+    public synchronized boolean isRunning() {
         return this.running;
     }
 
     /**
      * Returns the bind address. Null means all interfaces.
      */
-    public InetAddress getBindAddress()
-    {
+    public InetAddress getBindAddress() {
         return this.bindAddress;
     }
 
     /**
      * Sets the bind address. Null means all interfaces.
      */
-    public void setBindAddress(InetAddress bindAddress)
-    {
+    public void setBindAddress(InetAddress bindAddress) {
         this.bindAddress = bindAddress;
     }
 
     /**
      * Returns the port the server is running on.
      */
-    public int getPort()
-    {
+    public int getPort() {
         return this.config.getPort();
     }
 
     /**
      * Sets the port the server will run on.
      */
-    public void setPort(int port)
-    {
+    public void setPort(int port) {
         config.setPort(port);
     }
 
@@ -263,16 +242,32 @@ public class POP3Server {
      *
      * @return An instance of CommandHandler
      */
-    public CommandHandler getCommandHandler()
-    {
+    public CommandHandler getCommandHandler() {
         return this.commandHandler;
     }
 
     /**
      * Returns the server configuration.
      */
-    public POP3ServerConfig getConfig()
-    {
+    public POP3ServerConfig getConfig() {
         return config;
+    }
+
+    /**
+     * set the server authentication handler
+     *@param authenticationHandler
+     *
+     * @return
+     */
+
+    public void setAuthenticationHandler(AuthenticationHandler authenticationHandler) {
+        getConfig().setAuthenticationHandler(authenticationHandler);
+    }
+
+    /**
+     * return the server authentication handler
+     */
+    public AuthenticationHandler getAuthenticationHandler() {
+        return getConfig().getAuthenticationHandler();
     }
 }

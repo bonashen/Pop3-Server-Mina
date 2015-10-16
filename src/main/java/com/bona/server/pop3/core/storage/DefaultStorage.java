@@ -1,15 +1,17 @@
 package com.bona.server.pop3.core.storage;
 
+import com.bona.server.pop3.api.SessionContext;
 import com.bona.server.pop3.api.Storage;
-import com.bona.server.pop3.core.POP3Context;
+import com.bona.server.pop3.util.MD5Utils;
 
+import java.io.IOException;
 import java.io.InputStream;
 
 /**
  * Created by bona on 2015/10/13.
  */
 public class DefaultStorage implements Storage {
-    private POP3Context context;
+    private SessionContext context;
 
     public long getSize(int index) {
         return 0;
@@ -33,7 +35,24 @@ public class DefaultStorage implements Storage {
     }
 
     public String getState(int index) {
-        return null;
+        InputStream is = openStream(index);
+        if(null==is){
+            return null;
+        }
+        String state=null;
+        try {
+            state = "MD5:" + MD5Utils.get(is);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }finally {
+            try {
+                is.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+                return null;
+            }
+        }
+        return state;
     }
 
     public void commit() {
@@ -45,7 +64,7 @@ public class DefaultStorage implements Storage {
     }
 
     @Override
-    public final void initStorage(POP3Context context) {
+    public final void initStorage(SessionContext context) {
         this.context = context;
         onInitStorage();
     }
@@ -59,7 +78,7 @@ public class DefaultStorage implements Storage {
 
     }
 
-    public final POP3Context getContext() {
+    public final SessionContext getContext() {
         return context;
     }
 

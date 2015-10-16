@@ -18,7 +18,8 @@ public class RunServer {
         /**
          * set storage root path
         **/
-        System.setProperty(Constants.INBOX_STORAGE_DIR,new File(".").getAbsolutePath());
+        System.setProperty(Constants.INBOX_STORAGE_DIR,new File(".","inbox").getAbsolutePath());
+
 
         POP3Server server = new POP3Server(new DefaultAuthHandler(){
             @Override
@@ -26,6 +27,9 @@ public class RunServer {
                 return userName.equalsIgnoreCase("bona.shen@gmail.com") && password.equalsIgnoreCase("123456");
             }
         });
+
+        server.getConfig().setStorageFactory(new FileStorageFactory(new File(".","inbox")));
+
         server.start();
 
     }

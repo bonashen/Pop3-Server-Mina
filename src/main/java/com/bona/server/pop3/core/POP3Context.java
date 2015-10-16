@@ -1,5 +1,6 @@
 package com.bona.server.pop3.core;
 
+import com.bona.server.pop3.api.SessionContext;
 import com.bona.server.pop3.api.Storage;
 import com.bona.server.pop3.util.Constants;
 import com.bona.server.pop3.POP3ServerConfig;
@@ -8,14 +9,16 @@ import org.apache.mina.core.session.IoSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.net.SocketAddress;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Created by bona on 2015/10/12.
  */
-public class POP3Context {
+public class POP3Context implements SessionContext {
     private final static Logger LOG = LoggerFactory.getLogger(POP3Context.class);
+
     private final static String POP3_CONTEXT=POP3Context.class.getName()+".ctx";
     private static final String USER_NAME = AuthenticationHandler.class.getName()+".UserName";
     private static final String AUTH_VALUE = AuthenticationHandler.class.getName()+".Authed";
@@ -31,7 +34,6 @@ public class POP3Context {
         this.config = cfg;
         session.setAttribute(POP3_CONTEXT, this);
         this.storage = cfg.getStorageFactory().createStorage();
-        this.storage.initStorage(this);
     }
 
     public static final POP3Context getContextFromSession(IoSession session){
@@ -75,9 +77,16 @@ public class POP3Context {
         return value!=null && ((Boolean)value==true);
     }
 
-    public void authorize(){
+    @Override
+    public SocketAddress getRemoteAddress() {
+        return session.getRemoteAddress();
+    }
 
+    public void authorize(){
         setAttribute(AUTH_VALUE, true);
+        //init user storage.
+        this.storage.initStorage(this);
+        LOG.debug("User {} has authorized!",getUserName());
     }
 
     public void authorize(boolean value){

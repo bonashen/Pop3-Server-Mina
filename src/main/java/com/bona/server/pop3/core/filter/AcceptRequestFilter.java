@@ -1,7 +1,7 @@
 package com.bona.server.pop3.core.filter;
 
+import com.bona.server.pop3.api.SessionContext;
 import com.bona.server.pop3.api.filter.DefaultRequestFilter;
-import com.bona.server.pop3.core.POP3Context;
 
 import java.util.List;
 
@@ -12,7 +12,7 @@ public class AcceptRequestFilter extends DefaultRequestFilter {
     private final List<String> accepts;
 
     @Override
-    public boolean doFilter(POP3Context context, String cmd, String argument) {
+    public boolean doFilter(SessionContext context, String cmd, String argument) {
         return !accepts.contains(cmd.toUpperCase().trim());
     }
 

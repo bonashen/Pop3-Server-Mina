@@ -1,4 +1,6 @@
-package com.bona.server.pop3.core.command;
+package com.bona.server.pop3.core.command.impl;
+
+import com.bona.server.pop3.core.command.AbstractCommand;
 
 /**
  * Created by bona on 2015/10/10.
@@ -16,7 +18,9 @@ public class UidlCommand extends AbstractCommand {
             sendMessage(".");
         }else{
             int index = Integer.parseInt(argument);
-            sendMessage(index + " " + getStorage().getState(index-1));
+            String state=getStorage().getState(index - 1);
+            if(null==state)sendErrMessage("no such message");
+            else sendMessage(index + " " + state);
         }
     }
 }

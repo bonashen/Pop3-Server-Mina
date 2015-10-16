@@ -65,7 +65,7 @@ public interface Storage {
      * 设置会话上下文,并初始化存储
      * @param context
      */
-    void initStorage(POP3Context context);
+    void initStorage(SessionContext context);
 
     /**
      * 提取当前用户的邮箱，设定与用户端的会话一致性
