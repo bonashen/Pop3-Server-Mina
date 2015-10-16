@@ -63,7 +63,7 @@ public class CustomStorage extends CustomAuthHandlerTest {
                             }
 
                             @Override
-                            public String getState(int index) {
+                            public String getIdentity(int index) {
                                 return "One mail";
                             }
 

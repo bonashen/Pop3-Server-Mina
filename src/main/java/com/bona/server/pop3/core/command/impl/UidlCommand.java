@@ -14,11 +14,11 @@ public class UidlCommand extends AbstractCommand {
         sendOkMessage(" ");
         if (argument == null) {
             for (int i = 0; i < getStorage().getCount(); i++)
-                sendMessage(i + 1 + " " + getStorage().getState(i));
+                sendMessage(i + 1 + " " + getStorage().getIdentity(i));
             sendMessage(".");
         }else{
             int index = Integer.parseInt(argument);
-            String state=getStorage().getState(index - 1);
+            String state=getStorage().getIdentity(index - 1);
             if(null==state)sendErrMessage("no such message");
             else sendMessage(index + " " + state);
         }

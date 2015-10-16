@@ -34,7 +34,7 @@ public class DefaultStorage implements Storage {
         return false;
     }
 
-    public String getState(int index) {
+    public String getIdentity(int index) {
         InputStream is = openStream(index);
         if(null==is){
             return null;

@@ -45,11 +45,14 @@ public interface Storage {
     boolean delete(int index);
 
     /**
-     * 查询用户第index的邮件状态
+     * 查询用户第index的邮件唯一标识
      * @param index
-     * @return Boolean
+     * @return String
+     *
+     * null 表示邮件不存在
+     *
      */
-    public String getState(int index);
+    public String getIdentity(int index);
 
     /**
      * 确认删除邮件

@@ -36,7 +36,7 @@ public class FileStorage extends DefaultStorage {
 
 
     @Override
-    public String getState(int index) {
+    public String getIdentity(int index) {
         if (checkIndex(index) && !isDeleted(index)) {
             String state = getMails().get(index).getName();
             state = state.substring(0, state.lastIndexOf("."));
