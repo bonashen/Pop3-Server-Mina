@@ -27,7 +27,7 @@ public class AuthFilter extends DefaultRequestFilter {
     @Override
     public boolean doFilter(SessionContext context, String cmd, String argument) {
         boolean ret = new AndFilter(authFilter,acceptFilter).doFilter(context, cmd, argument);
-        LOG.debug("check user state.{}",ret);
+//        LOG.debug("check user state.{}",ret);
         return ret;
 //        return authFilter.doFilter(cmd) && acceptFilter.doFilter(cmd);
     }

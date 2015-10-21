@@ -1,7 +1,8 @@
 package com.bona.server.pop3.core.command.impl;
 
 import com.bona.server.pop3.core.command.AbstractCommand;
-import org.apache.commons.mail.util.MimeMessageParser;
+import com.bona.server.pop3.util.MimeMessageParser;
+import com.sun.mail.util.LineInputStream;
 
 import javax.mail.Session;
 import javax.mail.internet.MimeMessage;
@@ -9,7 +10,9 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
+import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.List;
 import java.util.Properties;
 
 /**
@@ -25,7 +28,7 @@ public class TopCommand extends AbstractCommand {
         String[] argv = argument.split(" ");
 
         int index = Integer.parseInt(argv[0]) - 1;
-        int contextRow = 0;
+        int contextRow = -1;
         if (argv.length >= 2)
             contextRow = Integer.parseInt(argv[1]);
         InputStream is = getStorage().openStream(index);
@@ -34,22 +37,54 @@ public class TopCommand extends AbstractCommand {
             return;
         }
         try {
+            /*
             MimeMessage message = new MimeMessage(Session.getDefaultInstance(new Properties()), is);
             MimeMessageParser parser = new MimeMessageParser(message).parse();
             Enumeration hdrLines = message.getAllHeaderLines();
-            sendOkMessage("index:"+index+1);
-            while (hdrLines.hasMoreElements()) {
-                sendMessage((String) hdrLines.nextElement());
-            }
-            if (parser.hasPlainContent() || parser.hasHtmlContent()) {
-                BufferedReader br = new BufferedReader(new StringReader(parser.hasPlainContent() ? parser.getPlainContent() : parser.getHtmlContent()));
-                String txt;
+            */
+
+            //send email header lines
+            LineInputStream lis = new LineInputStream(is);
+            try {
+                String text;
+                List<String> sb = new ArrayList<String>();
+                boolean body = false;
                 int row = 0;
-                while ((txt = br.readLine()) != null && row < contextRow) {
-                    sendMessage(txt);
-                    row++;
+                while ((text = lis.readLine()) != null) {
+                    sb.add(text);
+                    if (text.isEmpty() && body == false) {
+                        body = true;
+                        continue;
+                    }
+                    if (body) row++;
+                    if ((text.isEmpty() && body) || (row >= contextRow&& contextRow!=-1)) {
+                        break;
+                    }
                 }
+                if (contextRow > 0 && row < contextRow) {
+                    sendErrMessage("Too much rows.");
+                    return;
+                }
+                sendOkMessage("index:" + index + 1);
+                for (String s : sb)
+                    sendMessage(s);
+            }finally {
+                lis.close();
             }
+
+            /*while (hdrLines.hasMoreElements()) {
+                sendMessage((String) hdrLines.nextElement());
+            }*/
+            //send email body
+//            if (parser.hasPlainContent() || parser.hasHtmlContent()) {
+//                BufferedReader br = new BufferedReader(new StringReader(parser.hasPlainContent() ? parser.getPlainContent() : parser.getHtmlContent()));
+//                String txt;
+//                int row = 0;
+//                while ((txt = br.readLine()) != null && row < contextRow) {
+//                    sendMessage(txt);
+//                    row++;
+//                }
+//            }
             sendEndMessage();
 
         } catch (Exception e) {
@@ -57,7 +92,7 @@ public class TopCommand extends AbstractCommand {
             e.printStackTrace();
         } finally {
             try {
-                is.close();
+               if(is!=null) is.close();
             } catch (IOException e) {
                 e.printStackTrace();
             }
