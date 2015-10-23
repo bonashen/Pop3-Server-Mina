@@ -22,11 +22,10 @@ public class POP3ConnectionHandler extends IoHandlerAdapter {
     private final CommandHandler handler;
     private final POP3ServerConfig config;
     /**
-            * A thread safe variable that represents the number
-    * of active connections.
-    */
+     * A thread safe variable that represents the number
+     * of active connections.
+     */
     private AtomicInteger numberOfConnections = new AtomicInteger(0);
-
 
 
     public POP3ConnectionHandler(POP3ServerConfig config, CommandHandler commandHandler) {
@@ -37,8 +36,7 @@ public class POP3ConnectionHandler extends IoHandlerAdapter {
     /**
      * Are we over the maximum amount of connections ?
      */
-    private boolean hasTooManyConnections()
-    {
+    private boolean hasTooManyConnections() {
         return (config.getMaxConnections() > -1 &&
                 getNumberOfConnections() >= config.getMaxConnections());
     }
@@ -46,8 +44,7 @@ public class POP3ConnectionHandler extends IoHandlerAdapter {
     /**
      * Update the number of active connections.
      */
-    private void updateNumberOfConnections(int delta)
-    {
+    private void updateNumberOfConnections(int delta) {
         int count = numberOfConnections.addAndGet(delta);
         LOG.debug("Active connections count = {}", count);
     }
@@ -55,18 +52,16 @@ public class POP3ConnectionHandler extends IoHandlerAdapter {
     /**
      * @return The number of open connections
      */
-    public int getNumberOfConnections()
-    {
+    public int getNumberOfConnections() {
         return numberOfConnections.get();
     }
 
     @Override
     public void sessionCreated(IoSession session) throws Exception {
         updateNumberOfConnections(+1);
-        if (session.getTransportMetadata().getSessionConfigType() == SocketSessionConfig.class)
-        {
-            ((SocketSessionConfig)session.getConfig()).setReceiveBufferSize(config.getReceiveBufferSize());
-            ((SocketSessionConfig)session.getConfig()).setSendBufferSize(64);
+        if (session.getTransportMetadata().getSessionConfigType() == SocketSessionConfig.class) {
+            ((SocketSessionConfig) session.getConfig()).setReceiveBufferSize(config.getReceiveBufferSize());
+            ((SocketSessionConfig) session.getConfig()).setSendBufferSize(64);
         }
 
         session.getConfig().setIdleTime(IdleStatus.READER_IDLE, config.getConnectionTimeout() / 1000);
@@ -74,14 +69,13 @@ public class POP3ConnectionHandler extends IoHandlerAdapter {
         // We're going to use SSL negotiation notification.
         session.setAttribute(SslFilter.USE_NOTIFICATION);
 
-        new POP3Context(this.config,session);
+        new POP3Context(this.config, session);
 
         // Init protocol internals
         LOG.debug("POP3 connection count: {}", getNumberOfConnections());
-        if (hasTooManyConnections())
-        {
+        if (hasTooManyConnections()) {
             LOG.debug("Too many connections to the POP3 server !");
-            sendResponse(session, Constants.POP_ERR+"Too many connections.");
+            sendResponse(session, Constants.POP_ERR + "Too many connections.");
         }
 
     }
@@ -98,20 +92,19 @@ public class POP3ConnectionHandler extends IoHandlerAdapter {
     @Override
     public void sessionIdle(IoSession session, IdleStatus status) throws Exception {
         LOG.debug("IDLE" + session.getIdleCount(status));
-        try
-        {
-            sendResponse(session, Constants.POP_ERR+"Timeout waiting for data from client.");
-        } finally
-        {
-            session.close(false);
-        }
+        if (status == IdleStatus.BOTH_IDLE)
+            try {
+                sendResponse(session, Constants.POP_ERR + "Timeout waiting for data from client.");
+            } finally {
+                session.close(false);
+            }
     }
 
     @Override
     public void messageReceived(IoSession session, Object message) throws Exception {
-        LOG.debug("session id:{}  =>C:{}",session.getId(),message);
-        if(message instanceof String){
-            if(!handler.dispatchCommand(session,(String)message)){
+        LOG.debug("session id:{}  =>C:{}", session.getId(), message);
+        if (message instanceof String) {
+            if (!handler.dispatchCommand(session, (String) message)) {
                 session.close(false);
             }
         }
@@ -124,14 +117,14 @@ public class POP3ConnectionHandler extends IoHandlerAdapter {
 
     @Override
     public void messageSent(IoSession session, Object message) throws Exception {
-        LOG.debug("session id:{}  =>S:{}",session.getId(),message);
+        LOG.debug("session id:{}  =>S:{}", session.getId(), message);
     }
 
     @Override
     public void exceptionCaught(IoSession session, Throwable cause) throws Exception {
-        sendResponse(session, Constants.POP_ERR+cause.getMessage());
+        sendResponse(session, Constants.POP_ERR + cause.getMessage());
         session.close(false);
-        LOG.error("found error",cause);
+        LOG.error("found error", cause);
 
     }
 }
