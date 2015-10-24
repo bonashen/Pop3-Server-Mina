@@ -100,7 +100,7 @@ public class POP3Server {
             chain.addLast("threadPool", new ExecutorFilter(executor));
 
             acceptor.getSessionConfig().setReadBufferSize(1024 * 1024);
-            acceptor.getSessionConfig().setIdleTime(IdleStatus.BOTH_IDLE, getConnectionTimeout());
+            acceptor.getSessionConfig().setIdleTime(IdleStatus.BOTH_IDLE, 100);
             acceptor.getSessionConfig().setReuseAddress(true);
 
             handler = new POP3ConnectionHandler(getConfig(), getCommandHandler());
