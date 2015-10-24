@@ -43,6 +43,7 @@ public class RetrCommand extends AbstractCommand {
             sendErrMessage(e.getMessage());
         }finally {
             try {
+                mailStream.close();
                 br.close();
             } catch (IOException e) {
                 LOG.error("close BufferedReader error.",e);
