@@ -28,7 +28,7 @@ public class TopCommand extends AbstractCommand {
         String[] argv = argument.split(" ");
 
         int index = Integer.parseInt(argv[0]) - 1;
-        int contextRow = -1;
+        int contextRow = 0;
         if (argv.length >= 2)
             contextRow = Integer.parseInt(argv[1]);
         InputStream is = getStorage().openStream(index);
@@ -52,12 +52,14 @@ public class TopCommand extends AbstractCommand {
                 int row = 0;
                 while ((text = lis.readLine()) != null) {
                     sb.add(text);
+                    //body start.
                     if (text.isEmpty() && body == false) {
                         body = true;
                         continue;
                     }
                     if (body) row++;
-                    if ((text.isEmpty() && body) || (row >= contextRow&& contextRow!=-1)) {
+                    //body end.
+                    if (body && ((row >= contextRow) || text.isEmpty())) {
                         break;
                     }
                 }
@@ -65,10 +67,10 @@ public class TopCommand extends AbstractCommand {
                     sendErrMessage("Too much rows.");
                     return;
                 }
-                sendOkMessage("index:" + index + 1);
+                sendOkMessage("index:" + (index + 1));
                 for (String s : sb)
                     sendMessage(s);
-            }finally {
+            } finally {
                 lis.close();
             }
 
@@ -92,7 +94,7 @@ public class TopCommand extends AbstractCommand {
             e.printStackTrace();
         } finally {
             try {
-               if(is!=null) is.close();
+                if (is != null) is.close();
             } catch (IOException e) {
                 e.printStackTrace();
             }

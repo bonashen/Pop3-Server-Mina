@@ -1,5 +1,7 @@
 package com.bona.server.pop3.core;
 
+import java.io.InputStream;
+
 /**
  * Created by bona on 2015/10/13.
  */
@@ -10,6 +12,8 @@ public interface Response {
     void sendOkMessage(String message);
 
     void sendErrMessage(String message);
+
+    void sendMessage(InputStream data);
 
     void close();
 }

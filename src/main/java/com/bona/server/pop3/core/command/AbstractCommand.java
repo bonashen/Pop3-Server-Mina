@@ -7,6 +7,8 @@ import com.bona.server.pop3.core.Response;
 import com.bona.server.pop3.api.Storage;
 import com.bona.server.pop3.core.POP3Context;
 
+import java.io.InputStream;
+
 /**
  * Created by bona on 2015/10/9.
  */
@@ -45,6 +47,10 @@ public abstract class AbstractCommand implements Command {
     public void sendEndMessage() {
         sendMessage(".");
     }
+
+    public void sendMessage(InputStream data){
+        getResponse().sendMessage(data);
+    };
 
     public Storage getStorage(){
         return getCurrentContext().getStorage();
