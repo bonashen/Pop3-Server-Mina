@@ -12,6 +12,7 @@ import org.apache.mina.filter.codec.ProtocolCodecFilter;
 import org.apache.mina.filter.codec.textline.TextLineCodecFactory;
 import org.apache.mina.filter.executor.ExecutorFilter;
 import org.apache.mina.filter.logging.LoggingFilter;
+import org.apache.mina.filter.stream.StreamWriteFilter;
 import org.apache.mina.transport.socket.SocketAcceptor;
 import org.apache.mina.transport.socket.nio.NioSocketAcceptor;
 import org.slf4j.Logger;
@@ -87,6 +88,7 @@ public class POP3Server {
                 chain.addLast("logger", new LoggingFilter());
 
             chain.addLast("codec", new ProtocolCodecFilter(new TextLineCodecFactory(getConfig().getCharset())));
+            chain.addLast("stream", new StreamWriteFilter());
 
             executor = Executors.newCachedThreadPool(new ThreadFactory() {
                 int sequence;

@@ -33,19 +33,18 @@ public class RetrCommand extends AbstractCommand {
 
         try {
             sendOkMessage("");
+
             IoSession session = getCurrentContext().getSession();
-            byte[] buffer = new byte[1024];
-            int len = 0;
-            while ((len = mailStream.read(buffer)) >0) {
-                IoBuffer bb = IoBuffer.wrap(buffer, 0, len);
-                session.write(bb);
-            }
+//            byte[] buffer = new byte[1024];
+//            int len = 0;
+//            while ((len = mailStream.read(buffer)) >0) {
+//                IoBuffer bb = IoBuffer.wrap(buffer, 0, len);
+//                session.write(bb);
+//            }
+            session.write(mailStream);
+
             sendEndMessage();
 
-        } catch (IOException e) {
-            sendErrMessage(e.getMessage());
-            LOG.error("close BufferedReader error.", e);
-            e.printStackTrace();
         } finally {
             try {
                 mailStream.close();
