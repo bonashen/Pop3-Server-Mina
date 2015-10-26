@@ -11,6 +11,7 @@ public class CapaCommand extends AbstractCommand {
     protected void exec(String argument) {
         sendOkMessage("");
         sendMessage("USER");
+        sendMessage("TOP");
         sendMessage("UIDL");
         sendEndMessage();
     }

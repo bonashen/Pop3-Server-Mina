@@ -3,13 +3,12 @@ package com.bona.server.pop3.core.command.impl;
 import com.bona.server.pop3.core.command.AbstractCommand;
 import com.bona.server.pop3.util.MimeMessageParser;
 import com.sun.mail.util.LineInputStream;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.mail.Session;
 import javax.mail.internet.MimeMessage;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.StringReader;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
@@ -19,6 +18,8 @@ import java.util.Properties;
  * Created by bona on 2015/10/15.
  */
 public class TopCommand extends AbstractCommand {
+    private final static Logger LOG = LoggerFactory.getLogger(TopCommand.class);
+
     @Override
     protected void exec(String argument) {
         if (null == argument) {
@@ -28,9 +29,9 @@ public class TopCommand extends AbstractCommand {
         String[] argv = argument.split(" ");
 
         int index = Integer.parseInt(argv[0]) - 1;
-        int contextRow = 0;
+        int readRowCount = -1;
         if (argv.length >= 2)
-            contextRow = Integer.parseInt(argv[1]);
+            readRowCount = Integer.parseInt(argv[1]);
         InputStream is = getStorage().openStream(index);
         if (is == null) {
             sendErrMessage("mail has been deleted!");
@@ -47,31 +48,46 @@ public class TopCommand extends AbstractCommand {
             LineInputStream lis = new LineInputStream(is);
             try {
                 String text;
-                List<String> sb = new ArrayList<String>();
+                List<String> parts = new ArrayList<String>();
                 boolean body = false;
                 int row = 0;
                 while ((text = lis.readLine()) != null) {
-                    sb.add(text);
+                    parts.add(text);
+//                    LOG.debug(text);
                     //body start.
-                    if (text.isEmpty() && body == false) {
+                    if (text.equals("") && body == false) {
                         body = true;
-                        continue;
+//                        continue;
                     }
                     if (body) row++;
                     //body end.
-                    if (body && ((row >= contextRow) || text.isEmpty())) {
+                    if (body && ((row >= readRowCount))) {
                         break;
                     }
                 }
-                if (contextRow > 0 && row < contextRow) {
+                if (readRowCount > 0 && row < readRowCount) {
                     sendErrMessage("Too much rows.");
                     return;
                 }
+
                 sendOkMessage("index:" + (index + 1));
-                for (String s : sb)
-                    sendMessage(s);
+
+                sendMessage(parts);
+
+//                StringBuilder sb = new StringBuilder();
+//                for (String s : parts){
+//                    LOG.debug("row:"+s);
+//                    sb.append(s+"\n\r");
+//                }
+//                LOG.debug("send:"+sb.toString());
+//                ByteArrayInputStream in = new ByteArrayInputStream(sb.toString().getBytes());
+//                sendMessage(in);
+//                in.close();
+
+//                    sendMessage(s);
             } finally {
                 lis.close();
+
             }
 
             /*while (hdrLines.hasMoreElements()) {

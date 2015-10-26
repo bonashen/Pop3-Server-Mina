@@ -9,8 +9,11 @@ import org.apache.mina.core.session.IoSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.SocketAddress;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -110,6 +113,7 @@ public class POP3Context implements SessionContext {
 
     private final Response response = new Response() {
         private final String lineSeparator = "\r";
+        private final String twoLineSeparator = "\n\r";
 
         public void sendMessage(String message) {
             session.write(message + lineSeparator);
@@ -125,6 +129,23 @@ public class POP3Context implements SessionContext {
 
         public void sendMessage(InputStream data) {
             session.write(data);
+        }
+
+        @Override
+        public void sendMessage(List<String> data) {
+            if (data.isEmpty()) return;
+            StringBuilder sb = new StringBuilder();
+            for (String s : data) {
+                sb.append(s);
+                sb.append(twoLineSeparator);
+            }
+            ByteArrayInputStream is = new ByteArrayInputStream(sb.toString().getBytes());
+            sendMessage(is);
+            try {
+                is.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
 
         public void close() {
