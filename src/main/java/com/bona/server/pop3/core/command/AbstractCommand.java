@@ -6,6 +6,7 @@ import com.bona.server.pop3.api.AuthenticationHandler;
 import com.bona.server.pop3.core.Response;
 import com.bona.server.pop3.api.Storage;
 import com.bona.server.pop3.core.POP3Context;
+import org.apache.mina.core.session.IoSession;
 
 import java.io.InputStream;
 import java.util.List;
@@ -69,6 +70,9 @@ public abstract class AbstractCommand implements Command {
         return getCurrentContext().getConfig();
     }
 
+    public IoSession getIoSession() {
+        return getCurrentContext().getSession();
+    }
 
     public Response getResponse() {
         return getCurrentContext().getResponse();

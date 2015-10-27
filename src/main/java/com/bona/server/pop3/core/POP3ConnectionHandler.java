@@ -64,7 +64,7 @@ public class POP3ConnectionHandler extends IoHandlerAdapter {
             ((SocketSessionConfig) session.getConfig()).setSendBufferSize(64);
         }
 
-        session.getConfig().setIdleTime(IdleStatus.READER_IDLE, config.getConnectionTimeout() / 1000);
+        session.getConfig().setIdleTime(IdleStatus.BOTH_IDLE, config.getConnectionTimeout() / 1000);
 
         // We're going to use SSL negotiation notification.
         session.setAttribute(SslFilter.USE_NOTIFICATION);
@@ -102,7 +102,21 @@ public class POP3ConnectionHandler extends IoHandlerAdapter {
 
     @Override
     public void messageReceived(IoSession session, Object message) throws Exception {
-        LOG.debug("session id:{}  =>C:{}", session.getId(), message);
+        if (message == null) {
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("no more lines from client");
+                return;
+            }
+        }
+
+        if (message instanceof SslFilter.SslFilterMessage) {
+            if (LOG.isDebugEnabled())
+                LOG.debug("SSL FILTER message -> " + message);
+            return;
+        }
+        if (LOG.isDebugEnabled())
+            LOG.debug("session id:{}  =>C:{}", session.getId(), message);
+
         if (message instanceof String) {
             if (!handler.dispatchCommand(session, (String) message)) {
                 session.close(false);
